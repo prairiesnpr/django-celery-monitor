@@ -10,6 +10,16 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.encoding import force_text
 from django.utils.html import escape
+
+try:
+    from django.utils.safestring import mark_safe
+except ImportError:
+    def mark_safe(func):
+        def wrapper():
+            func()
+        return wrapper
+    
+    
 from django.utils.translation import ugettext_lazy as _
 
 from celery import current_app
@@ -39,7 +49,7 @@ class MonitorList(main_views.ChangeList):
         super(MonitorList, self).__init__(*args, **kwargs)
         self.title = self.model_admin.list_page_title
 
-
+@mark_safe
 @display_field(_('state'), 'state')
 def colored_state(task):
     """Return the task state colored with HTML/CSS according to its level.
@@ -50,7 +60,7 @@ def colored_state(task):
     color = TASK_STATE_COLORS.get(task.state, 'black')
     return '<b><span style="color: {0};">{1}</span></b>'.format(color, state)
 
-
+@mark_safe
 @display_field(_('state'), 'last_heartbeat')
 def node_state(node):
     """Return the worker state colored with HTML/CSS according to its level.
@@ -61,7 +71,7 @@ def node_state(node):
     color = NODE_STATE_COLORS[state]
     return '<b><span style="color: {0};">{1}</span></b>'.format(color, state)
 
-
+@mark_safe
 @display_field(_('ETA'), 'eta')
 def eta(task):
     """Return the task ETA as a grey "none" if none is provided."""
@@ -69,7 +79,7 @@ def eta(task):
         return '<span style="color: gray;">none</span>'
     return escape(make_aware(task.eta))
 
-
+@mark_safe
 @display_field(_('when'), 'tstamp')
 def tstamp(task):
     """Better timestamp rendering.
@@ -82,7 +92,7 @@ def tstamp(task):
         escape(str(value)), escape(naturaldate(value)),
     )
 
-
+@mark_safe
 @display_field(_('name'), 'name')
 def name(task):
     """Return the task name and abbreviates it to maximum of 16 characters."""
